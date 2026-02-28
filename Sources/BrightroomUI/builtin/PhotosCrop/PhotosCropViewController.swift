@@ -338,16 +338,22 @@ public final class PhotosCropViewController: UIViewController {
       update(with: store.state)
     }
     
-    cropView.store.sinkState { [weak self] (state) in
-      
-      guard let self = self else { return }
+      cropView.store.sinkState { [weak self] (state) in
+            
+        guard let self = self else { return }
 
-      state.ifChanged(\.preferredAspectRatio).do { ratio in
-        self.aspectRatioControl?.setSelected(ratio)
+        state.ifChanged(\.preferredAspectRatio).do { ratio in
+          self.aspectRatioControl?.setSelected(ratio)
+        }
+
+        // ⭐️ PATCH
+        state.ifChanged(\.proposedCrop).do { proposed in
+          guard let proposed = proposed else { return }
+          self.editingStack.crop(proposed)
+        }
+            
       }
-      
-    }
-    .store(in: &subscriptions)
+      .store(in: &subscriptions)
         
   }
   
