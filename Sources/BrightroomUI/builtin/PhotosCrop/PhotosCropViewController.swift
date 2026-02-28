@@ -347,10 +347,17 @@ public final class PhotosCropViewController: UIViewController {
         }
 
         // ⭐️ PATCH
-        state.ifChanged(\.proposedCrop).do { proposed in
+      state.ifChanged(\.proposedCrop).do { proposed in
           guard let proposed = proposed else { return }
-          self.editingStack.crop(proposed)
-        }
+          guard let loaded = self.editingStack.state.primitive.loadedState else { return }
+
+          var merged = proposed
+          
+          // 保留当前 adjustmentAngle（slider 控制）
+          merged.adjustmentAngle = loaded.currentEdit.crop.adjustmentAngle
+          
+          self.editingStack.crop(merged)
+      }
             
       }
       .store(in: &subscriptions)
