@@ -151,7 +151,7 @@ public final class PhotosCropViewController: UIViewController {
     super.viewDidLoad()
     
     editingStack.start()
-    cropView.isAutoApplyEditingStackEnabled = true
+    cropView.isAutoApplyEditingStackEnabled = false
     view.backgroundColor = .black
     view.clipsToBounds = true
     
@@ -338,27 +338,34 @@ public final class PhotosCropViewController: UIViewController {
       update(with: store.state)
     }
     
-      cropView.store.sinkState { [weak self] (state) in
-            
+      cropView.store.sinkState { [weak self] state in
         guard let self = self else { return }
 
         state.ifChanged(\.preferredAspectRatio).do { ratio in
           self.aspectRatioControl?.setSelected(ratio)
         }
 
-        // ⭐️ PATCH
-      state.ifChanged(\.proposedCrop).do { proposed in
+        // ✅ PATCH：实时同步 proposedCrop，但保留 adjustmentAngle，并且防回环
+        state.ifChanged(\.proposedCrop).do { proposed in
           guard let proposed = proposed else { return }
           guard let loaded = self.editingStack.state.primitive.loadedState else { return }
 
+          let current = loaded.currentEdit.crop
+
+          // 1) 防回环：如果 extent/rotation 没变，就别写回
+          // （避免 slider 改角度触发 CropView 刷新 -> proposedCrop 再触发写回）
+          if proposed.cropExtent == current.cropExtent,
+             proposed.rotation == current.rotation {
+            return
+          }
+
+          // 2) 合并：用 UI 的 extent/rotation，但保留当前 angle（slider 控制）
           var merged = proposed
-          
-          // 保留当前 adjustmentAngle（slider 控制）
-          merged.adjustmentAngle = loaded.currentEdit.crop.adjustmentAngle
-          
+          merged.adjustmentAngle = current.adjustmentAngle
+
           self.editingStack.crop(merged)
-      }
-            
+        }
+
       }
       .store(in: &subscriptions)
         
