@@ -72,9 +72,9 @@ public final class PhotosCropViewController: UIViewController {
   
   // MARK: - Properties
   
-  private let store: UIStateStore<State, Never>
+  let store: UIStateStore<State, Never>
   
-  private let cropView: CropView
+  let cropView: CropView
   private var aspectRatioControl: PhotosCropAspectRatioControl?
   
   public let editingStack: EditingStack
@@ -151,7 +151,7 @@ public final class PhotosCropViewController: UIViewController {
     super.viewDidLoad()
     
     editingStack.start()
-    cropView.isAutoApplyEditingStackEnabled = false
+    cropView.isAutoApplyEditingStackEnabled = true
     view.backgroundColor = .black
     view.clipsToBounds = true
     
@@ -338,36 +338,16 @@ public final class PhotosCropViewController: UIViewController {
       update(with: store.state)
     }
     
-      cropView.store.sinkState { [weak self] state in
-        guard let self = self else { return }
+    cropView.store.sinkState { [weak self] (state) in
+      
+      guard let self = self else { return }
 
-        state.ifChanged(\.preferredAspectRatio).do { ratio in
-          self.aspectRatioControl?.setSelected(ratio)
-        }
-
-        // ✅ PATCH：实时同步 proposedCrop，但保留 adjustmentAngle，并且防回环
-        state.ifChanged(\.proposedCrop).do { proposed in
-          guard let proposed = proposed else { return }
-          guard let loaded = self.editingStack.state.primitive.loadedState else { return }
-
-          let current = loaded.currentEdit.crop
-
-          // 1) 防回环：如果 extent/rotation 没变，就别写回
-          // （避免 slider 改角度触发 CropView 刷新 -> proposedCrop 再触发写回）
-          if proposed.cropExtent == current.cropExtent,
-             proposed.rotation == current.rotation {
-            return
-          }
-
-          // 2) 合并：用 UI 的 extent/rotation，但保留当前 angle（slider 控制）
-          var merged = proposed
-          merged.adjustmentAngle = current.adjustmentAngle
-
-          self.editingStack.crop(merged)
-        }
-
+      state.ifChanged(\.preferredAspectRatio).do { ratio in
+        self.aspectRatioControl?.setSelected(ratio)
       }
-      .store(in: &subscriptions)
+      
+    }
+    .store(in: &subscriptions)
         
   }
   
