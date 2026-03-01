@@ -65,7 +65,7 @@ public final class PhotosCropViewController: UIViewController {
     public var didCancel: (PhotosCropViewController) -> Void = { _ in }
   }
   
-  private struct State: Equatable {
+  struct State: Equatable {
     var isSelectingAspectRatio = false
     var options: Options
   }
