@@ -76,6 +76,9 @@ public final class PhotosCropViewController: UIViewController {
   
   let cropView: CropView
   private var aspectRatioControl: PhotosCropAspectRatioControl?
+public var cropViewPublic: CropView {
+    return cropView
+}
   
   public let editingStack: EditingStack
   public var handlers = Handlers()
