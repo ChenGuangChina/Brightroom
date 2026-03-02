@@ -219,7 +219,7 @@ public final class CropView: UIView, UIScrollViewDelegate {
 
   private var stateHandler: @MainActor (Verge.Changes<CropView.State>) -> Void = { _ in }
 
-  var isAutoApplyEditingStackEnabled = false
+  public var isAutoApplyEditingStackEnabled = false
 
   // MARK: - Initializers
 

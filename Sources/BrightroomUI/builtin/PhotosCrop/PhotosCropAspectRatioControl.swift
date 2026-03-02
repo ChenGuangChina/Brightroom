@@ -28,7 +28,7 @@ import Verge
 import BrightroomEngine
 #endif
 
-final class PhotosCropAspectRatioControl: PixelEditorCodeBasedView {
+public final class PhotosCropAspectRatioControl: PixelEditorCodeBasedView {
   struct State: Equatable {
     enum Direction {
       /**
